@@ -1,23 +1,27 @@
-import React, {useState} from 'react';
-const Search = ({searchUsers, clearUsers}) => {
-	let [text, setText] = useState('');
+import React, {useState, useContext} from 'react';
+import GithubContext from '../../context/github/githubContext';
+
+const Search = ({clearUsers}) => {
+	const githubContext = useContext(GithubContext);
+
+	let [state, setState] = useState({text: ""});
 
 	let onChange = (e) => {
-		this.setState({text: e.target.value});
+		setState({...state, text: e.target.value});
 	};
 
 	let onSubmit = (e) => {
 		e.preventDefault();
 
-		this.props.searchUsers(this.state.text);
+		githubContext.searchUsers(state.text);
 
-		this.setState({text: ""});
+		setState({...state, text: ""});
 	};
 
 	return (
 		<div>
-			<form onSubmit={this.onSubmit} className="form">
-				<input type="text" name="text" placeholder="type word" value={this.state.text} onChange={this.onChange}/>
+			<form onSubmit={onSubmit} className="form">
+				<input type="text" name="text" placeholder="type word" value={state.text} onChange={onChange}/>
 				<button>Search</button>
 				<button type="button" onClick={clearUsers}>Clear</button>
 			</form>

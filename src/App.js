@@ -1,4 +1,4 @@
-import React, {Component, Fragment} from 'react';
+import React, {Component, Fragment, useState, useEffect} from 'react';
 import About from './components/pages/About';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import './App.css';
@@ -6,58 +6,51 @@ import Navbar from './components/layout/Navbar';
 import Users from './components/users/Users';
 import User from './components/users/User';
 import Search from './components/users/Search';
+import GithubState from './context/github/GithubState';
 import axios from 'axios';
 
-class App extends Component{
-	state = {
+const App = () => {
+	let [state, setState] = useState({
 		users: [],
 		user: {},
-		loading: true,
-		accessParameter: `client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`
-	};
+		loading: true
+	});
 
-	searchUsers = (text) => {
-		this.setState({loading: true});
+	let accessParameter = `client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`;
 
-		if(text === "")
-			return this.getAllUsers();
+	let getUser = (username) => {
+		setState({...state, loading: true});
 
-		axios.get(`https://api.github.com/search/users?q=${text}&${this.state.accessParameter}`)
+		axios.get(`https://api.github.com/users/${username}?${accessParameter}`)
 			.then((response) => {
-				this.setState({loading: false, users: response.data.items});
+				setState({...state, loading: false});
+
+				setState({...state, user: response.data});
 			});
 	};
 
-	getUser = (username) => {
-		this.setState({loading: true});
+	let getAllUsers = () => {
+		setState({...state, loading: true});
 
-		axios.get(`https://api.github.com/users/${username}?${this.state.accessParameter}`)
+		axios.get(`https://api.github.com/users?${accessParameter}`)
 			.then((response) => {
-				this.setState({loading: false, user: response.data});
+				setState({...state, loading: false});
+
+				setState({...state, users: response.data});
 			});
 	};
 
-	getAllUsers = () => {
-		this.setState({loading:true});
-
-		axios.get(`https://api.github.com/users?${this.state.accessParameter}`)
-			.then((response) => {
-				this.setState({users: response.data});
-
-				this.setState({loading: false});
-			});
+	let clearUsers = () => {
+		setState({...state, users: []});
 	};
 
-	clearUsers = () => {
-		this.setState({users: []});
-	};
+	useEffect(() => {
+		getAllUsers();
+	}, []);
 
-	componentDidMount() {
-		this.getAllUsers();
-	}
 
-	render() {
-		return (
+	return (
+		<GithubState>
 			<Router>
 				<div className='App'>
 					<Navbar title="Github Finder"/>
@@ -67,21 +60,21 @@ class App extends Component{
 							path="/"
 							render={props => (
 								<Fragment>
-									<Search searchUsers={this.searchUsers} clearUsers={this.clearUsers} />
-									<Users loading={this.state.loading} users={this.state.users} />
+									<Search clearUsers={clearUsers} />
+									<Users loading={state.loading} users={state.users} />
 								</Fragment>
 							)}
 						/>
 
 						<Route exact path="/about" component={About} />
 						<Route exact path="/user/:login" render={props => (
-							<User {...props} loading={this.state.loading} getUser={this.getUser} user={this.state.user} />
+							<User {...props} loading={state.loading} getUser={getUser} user={state.user} />
 						)}/>
 					</Switch>
 				</div>
 			</Router>
-		);
-	}
-}
+		</GithubState>
+	);
+};
 
 export default App;

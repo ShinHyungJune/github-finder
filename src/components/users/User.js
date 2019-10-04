@@ -1,33 +1,26 @@
-import React, {Component, Fragment} from 'react';
+import React, {Component, Fragment, useEffect, useState} from 'react';
 import Spinner from '../layout/Spinner';
 import {Link} from 'react-router-dom';
 
-class User extends Component {
-	state = {
-		username: ""
-	};
+const User = ({user, loading, getUser, match}) => {
+	const [state, setState] = useState({username: ""});
 
-	componentDidMount() {
-		this.props.getUser(this.props.match.params.login);
-	}
+	useEffect(() => {
+		getUser(match.params.login);
+	}, []);
 
-	render() {
-		const {avatar_url} = this.props.user;
-		const {loading} = this.props.loading;
+	if(loading)
+		return (<Spinner/>);
 
-		if(loading)
-			return (<Spinner/>);
+	return (
+		<Fragment>
+			<Link to="/">Back To Search</Link>
 
-		return (
-			<Fragment>
-				<Link to="/">Back To Search</Link>
-
-				<div>
-					<img src={avatar_url} alt=""/>
-				</div>
-			</Fragment>
-		);
-	}
+			<div>
+				<img src={state.user.avatar_url} alt=""/>
+			</div>
+		</Fragment>
+	);
 }
 
 export default User;
